@@ -37,6 +37,11 @@ export default class SortableList extends Component {
     onChangeOrder: PropTypes.func,
     onActivateRow: PropTypes.func,
     onReleaseRow: PropTypes.func,
+
+    onScroll: PropTypes.func,
+
+    onEndReached: PropTypes.func,
+    onEndReachedThreshold: PropTypes.number,
   };
 
   static defaultProps = {
@@ -45,8 +50,9 @@ export default class SortableList extends Component {
     autoscrollAreaSize: 60,
     manuallyActivateRows: false,
     showsVerticalScrollIndicator: true,
-    showsHorizontalScrollIndicator: true
-  }
+    showsHorizontalScrollIndicator: true,
+    onEndReachedThreshold: 0.5,
+  };
 
   /**
    * Stores refs to rows’ components by keys.
@@ -60,6 +66,8 @@ export default class SortableList extends Component {
   _resolveRowLayout = {};
 
   _contentOffset = {x: 0, y: 0};
+
+  _endReachedReportedForContentHeight: 0;
 
   state = {
     animated: false,
@@ -621,8 +629,28 @@ export default class SortableList extends Component {
     }
   };
 
-  _onScroll = ({nativeEvent: {contentOffset}}) => {
-      this._contentOffset = contentOffset;
+  _onScroll = (params) => {
+    const {nativeEvent: {contentOffset, contentSize, layoutMeasurement}} = params;
+    const {scrollEnabled} = this.state;
+    this._contentOffset = contentOffset;
+    if (scrollEnabled && this.props.onScroll) {
+      this.props.onScroll(params);
+    }
+    if (
+      scrollEnabled &&
+      this.props.onEndReachedThreshold > 0 &&
+      this.props.onEndReached &&
+      this._endReachedReportedForContentHeight !== contentSize.height
+    ) {
+      const endBottom = contentSize.height - layoutMeasurement.height * this.props.onEndReachedThreshold;
+      const endOffset = contentOffset.y + layoutMeasurement.height;
+      const endReached = endOffset >= endBottom;
+      if (endReached) {
+        this._endReachedReportedForContentHeight = contentSize.height;
+        const distanceFromEnd = (contentSize.height - endOffset) / layoutMeasurement.height;
+        this.props.onEndReached({ info: { distanceFromEnd } });
+      }
+    }
   };
 
   _onRefContainer = (component) => {
