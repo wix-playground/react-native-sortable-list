@@ -130,6 +130,7 @@ export default class SortableList extends Component {
       } else {
         this.setState({
           data: nextData,
+          rowsLayouts: null,
           order: nextOrder
         });
       }
