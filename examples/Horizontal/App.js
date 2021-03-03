@@ -15,7 +15,7 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import SortableList from 'react-native-sortable-list';
+import SortableList from '@wix/react-native-sortable-list';
 
 const window = Dimensions.get('window');
 
